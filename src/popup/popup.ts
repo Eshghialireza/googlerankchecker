@@ -17,8 +17,10 @@ $('#addsite').on('click', () => {
         if (tabs[0].url) {
 
             const response = await storageService.addSite(tabs[0].url);
-            if (response && response.added)
+            if (response && response.added) {
                 $('#site-ranks').append(CommonHelper.createSiteElement(response.item));
+                $('#open-chart').show();
+            }
         }
     });
 })
@@ -28,11 +30,15 @@ $('#refreshbtn').on('click', SearchHelper.refresh);
 $('#btnOptions').on('click', () => {
     chrome.runtime.openOptionsPage();
 })
+$('#open-chart').on('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL("chart.html") });
+})
 
 const sitesRefresh = (): void => {
     chrome.storage.sync.get('mysites', async (data) => {
         if (data.mysites && data.mysites.length > 0) {
             const isGoolePage = await CommonHelper.isGooglePage();
+            $('#open-chart').show();
             if (isGoolePage) {
                 $('#addsite').hide();
 
@@ -57,6 +63,8 @@ const sitesRefresh = (): void => {
                 }
             }
 
+        } else {
+            $('#open-chart').hide();
         }
     });
 }
@@ -117,16 +125,16 @@ const getRank = (googleurl: URL, callback: any): void => {
                     let domain = CommonHelper.getDomainNameFromUrl(url);
                     mysites.forEach(site => {
                         if (site.hostname.toLowerCase() === domain.toLowerCase()) {
-                            if(keyword){
-                                if(!rankStorageList.find(item=>item.hostname.toLowerCase()===site.hostname.toLowerCase())){
-                                    rankStorageList.push({ hostname: domain,keyWords:[{keyword:keyword,rankHistory: [{ date: today, rank: i + 1 }] }] })
+                            if (keyword) {
+                                if (!rankStorageList.find(item => item.hostname.toLowerCase() === site.hostname.toLowerCase())) {
+                                    rankStorageList.push({ hostname: domain, keyWords: [{ keyword: keyword, rankHistory: [{ date: today, rank: i + 1 }] }] })
                                 }
                             }
                         }
                     })
                     _searchCache[keyword as string].push({ domain, rank: i + 1 });
                 }
-                if(rankStorageList.length>0){
+                if (rankStorageList.length > 0) {
                     rankStorageService.addRank(rankStorageList);
                 }
             })
