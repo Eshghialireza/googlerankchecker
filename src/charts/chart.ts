@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         const sampleData=sampleDataForChart();
         drawChart(sampleData,"future","your");
+        if(ranks.length<1){
+            alert("Oops! Nothing to show yet. Try searching a few keywords to see who’s ruling Google! 🚀");
+        }
     })
 })
 
