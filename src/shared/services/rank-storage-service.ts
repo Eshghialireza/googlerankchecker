@@ -46,4 +46,16 @@ export class RankStorageService {
             });
         });
     }
+    public removeRanks(name: string): void {
+        chrome.storage.sync.get('myranks', (data) => {
+        const mySites: RankStorageModel[] = data.myranks || [];
+
+             var targetSite=mySites.find(site=>site.hostname===name);
+            if (targetSite) {
+                var index = data.myranks.indexOf(targetSite);
+                data.myranks.splice(index, 1);
+            }
+            chrome.storage.sync.set({ 'myranks': data.myranks });
+        })
+    }
 }
