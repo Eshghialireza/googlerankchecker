@@ -1,4 +1,6 @@
 body {
+    display: flex;
+    flex-direction: column;
     min-width: 160px;
     width: 320px;
     min-height: 200px;
@@ -39,6 +41,7 @@ body {
     float: right;
 }
 .chart-btn-container{
+    margin-top: auto;
     display: flex;
     justify-content: flex-end;
 }
