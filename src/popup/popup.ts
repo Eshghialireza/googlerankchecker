@@ -2,15 +2,11 @@ import "./popup.scss";
 import { StorageService } from "../shared/services/storage-service"
 import { CommonHelper } from "../shared/helpers/common-helper";
 import { SearchHelper } from "../shared/helpers/search-helper";
-import { SiteStorageModel } from "../shared/models/site-storage";
 import { SerpHelper } from "../shared/helpers/serp-helper";
-import { RankStorageService } from "../shared/services/rank-storage-service";
-import { RankStorageModel } from "../shared/models/rank-storage";
 
 var _searchCache: { [key: string]: any } = {};
 const storageService = new StorageService();
 const serpHelper = new SerpHelper();
-const rankStorageService = new RankStorageService();
 
 $('#addsite').on('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
@@ -99,45 +95,27 @@ const showSites = (query: string, tabId: number): void => {
 }
 
 const getRank = (googleurl: URL, callback: any): void => {
-    console.log("befor entering the if");
     let keyword = SearchHelper.getKeywordFromUrl(googleurl);
     // Throw an error if the keyword is null or undefined
     if (!keyword) throw new Error('Keyword not found');
     googleurl.searchParams.set('num', '100');
     // To avoid being affected by paging
     // It says 100 results starting from page 0
-    googleurl.searchParams.set('start', '0');
+    googleurl.searchParams.set('start','0');
+
     if (_searchCache[keyword] === undefined) {
-        console.log("after if in the _searchCache");
         _searchCache[keyword] = [];
         httpGetAsync(googleurl.href, (res: any) => {
             let element = document.createElement('html');
             element.innerHTML = res;
 
             let resultItems = serpHelper.getResultItems(element);
+            for (let i = 0; i < resultItems.length; i++) {
+                let url = serpHelper.getLinkFromResultItem(resultItems[i]);
+                let domain = CommonHelper.getDomainNameFromUrl(url);
+                _searchCache[keyword as string].push({ domain, rank: i + 1 });
+            }
 
-            storageService.getSites().then(data => {
-                const mysites = data;
-                var rankStorageList: RankStorageModel[] = [];
-                const today = new Date().toISOString().split("T")[0];
-                for (let i = 0; i < resultItems.length; i++) {
-                    let url = serpHelper.getLinkFromResultItem(resultItems[i]);
-                    let domain = CommonHelper.getDomainNameFromUrl(url);
-                    mysites.forEach(site => {
-                        if (site.hostname.toLowerCase() === domain.toLowerCase()) {
-                            if (keyword) {
-                                if (!rankStorageList.find(item => item.hostname.toLowerCase() === site.hostname.toLowerCase())) {
-                                    rankStorageList.push({ hostname: domain, keyWords: [{ keyword: keyword, rankHistory: [{ date: today, rank: i + 1 }] }] })
-                                }
-                            }
-                        }
-                    })
-                    _searchCache[keyword as string].push({ domain, rank: i + 1 });
-                }
-                if (rankStorageList.length > 0) {
-                    rankStorageService.addRank(rankStorageList);
-                }
-            })
             if (callback) {
                 callback();
             }
