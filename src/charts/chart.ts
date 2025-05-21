@@ -46,9 +46,7 @@ function sampleDataForChart(): { date: string; rank: number }[] {
 
 
     for (let i = 100; i >= 1; i--) {
-
-        date = new Date(date.toISOString().split("T")[0]);
-        sampleData.push({ date: date.toDateString().split("T")[0], rank: i })
+        sampleData.push({ date: date.toISOString().split("T")[0], rank: i })
         date.setDate(date.getDate() + 1);
     }
     return sampleData;
