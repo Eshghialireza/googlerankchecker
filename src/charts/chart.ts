@@ -2,57 +2,43 @@ import "./chart.scss"
 import Chart from 'chart.js/auto';
 import { RankStorageModel } from "../shared/models/rank-storage";
 let rankChartInstance: Chart | null = null;
-// after opening the tab it will fill the selector with sorted ranks hostnames
+
 document.addEventListener('DOMContentLoaded', () => {
-    const siteSelector = document.getElementById('siteSelector') as HTMLSelectElement | null;
-    if (!siteSelector) return;
-    chrome.storage.sync.get("myranks", data => {
-        const ranks: RankStorageModel[] = data.myranks || [];
-        ranks.forEach((rank) => {
-            const option = document.createElement('option');
-            if (!rank.hostname) return;
-            option.value = rank.hostname;
-            option.textContent = rank.hostname;
-            siteSelector.appendChild(option);
-        })
-        const sampleData=sampleDataForChart();
-        drawChart(sampleData,"future","your");
-        if(ranks.length<1){
-            alert("Oops! Nothing to show yet. Try searching a few keywords to see who’s ruling Google! 🚀");
+    chrome.storage.sync.get("hostname", function (result) {
+        if (result.hostname) {
+            openAndDraw(result.hostname);
+            chrome.storage.local.remove("hostname");
+        } else {
+            throw Error("no host name found in storage");
         }
     })
 })
 
 $('#siteSelector').on('change', function () {
+    const keywordSelector = document.getElementById('keywordSelector') as HTMLSelectElement | null;
+    if (!keywordSelector) return;
     const hostname = String($(this).val() || '');
     chrome.storage.sync.get("myranks", data => {
         const mySites: RankStorageModel[] = data.myranks || [];
         const targetSite = mySites.find(site => site.hostname.toLowerCase() === hostname.toLowerCase());
         if (targetSite) {
-            $('#keyWordSelector').find('option:not(:disabled)').remove();
+            $('#keywordSelector').find('option').remove();
             if (targetSite.keyWords) {
-                targetSite.keyWords.forEach((kw) => {
-                    $('#keyWordSelector').append(`<option value="${kw.keyword}">${kw.keyword}</option>`);
-                })
-                $('#keyWordSelector').show();
+                for (var i = 0; i < targetSite.keyWords.length; i++) {
+                    let option = document.createElement('option');
+                    if (i === 0)
+                        option.selected = true;
+                    option.value = targetSite.keyWords[i].keyword;
+                    option.textContent = targetSite.keyWords[i].keyword;
+                    keywordSelector.appendChild(option);
+                }
             }
+            drawChart(targetSite.keyWords[0].rankHistory,targetSite.keyWords[0].keyword,targetSite.hostname);
         }
     })
 });
-function sampleDataForChart(): { date: string; rank: number }[] {
-    const sampleData: { date: string; rank: number }[] = [];
-    let date = new Date();
 
-
-
-    for (let i = 100; i >= 1; i--) {
-        sampleData.push({ date: date.toISOString().split("T")[0], rank: i })
-        date.setDate(date.getDate() + 1);
-    }
-    return sampleData;
-}
-
-$('#keyWordSelector').on('change', function () {
+$('#keywordSelector').on('change', function () {
     const selectKwString = String($(this).val() || '');
     const selectSite = String($('#siteSelector').val() || '');
     if (selectKwString.length >= 1) {
@@ -65,6 +51,46 @@ $('#keyWordSelector').on('change', function () {
         })
     }
 })
+function openAndDraw(hostname: string) {
+    console.log("starting to draw");
+    const siteSelector = document.getElementById('siteSelector') as HTMLSelectElement | null;
+    const keywordSelector = document.getElementById('keywordSelector') as HTMLSelectElement | null;
+    if (!siteSelector || !keywordSelector) return;
+    chrome.storage.sync.get("myranks", data => {
+        console.log("data finded");
+        const myranks: RankStorageModel[] = data.myranks || [];
+        if (myranks.length > 0) {
+            console.log("there is data");
+            myranks.forEach((rank) => {
+                let option = document.createElement('option');
+                if (hostname.toLowerCase() === rank.hostname.toLowerCase()) {
+                    option.selected = true;
+                }
+                option.value = rank.hostname;
+                option.textContent = rank.hostname;
+                siteSelector.appendChild(option);
+            })
+            const targetSite = myranks.find((site) => site.hostname.toLowerCase() === hostname.toLowerCase());
+            if (!targetSite || targetSite.keyWords.length === 0) {
+                alert("Oops! Nothing to show yet. Try searching a few keywords to see who's ruling Google! 🚀");
+                return;
+            } else {
+                for (var i = 0; i < targetSite.keyWords.length; i++) {
+                    let option = document.createElement('option');
+                    if (i === 0)
+                        option.selected = true;
+                    option.value = targetSite.keyWords[i].keyword;
+                    option.textContent = targetSite.keyWords[i].keyword;
+                    keywordSelector.appendChild(option);
+                }
+                drawChart(targetSite.keyWords[0].rankHistory, targetSite.keyWords[0].keyword, targetSite.hostname);
+            }
+        } else {
+            alert("Oops! Nothing to show yet. Try searching a few keywords to see who`s ruling Google! 🚀");
+            return;
+        }
+    })
+}
 function drawChart(
     rankHistory: { date: string; rank: number }[],
     keyword: string,

@@ -40,8 +40,12 @@ body {
 .rank-list .rank-badge {
     float: right;
 }
-.chart-btn-container{
-    margin-top: auto;
-    display: flex;
-    justify-content: flex-end;
+
+.pointer {
+    transition: transform 0.3s ease-in-out;
+}
+
+.pointer:hover {
+    cursor: pointer;
+    transform: scale(1.2);
 }

@@ -26,15 +26,17 @@ $('#refreshbtn').on('click', SearchHelper.refresh);
 $('#btnOptions').on('click', () => {
     chrome.runtime.openOptionsPage();
 })
-$('#open-chart').on('click', () => {
+$(document).on('click', '#chart-btn', function () {
+    var hostname = $(this).closest('li').find('.site-name').text();
+    chrome.storage.sync.set({hostname:hostname},function(){
     chrome.tabs.create({ url: chrome.runtime.getURL("chart.html") });
-})
+    });
+});
 
 const sitesRefresh = (): void => {
     chrome.storage.sync.get('mysites', async (data) => {
         if (data.mysites && data.mysites.length > 0) {
             const isGoolePage = await CommonHelper.isGooglePage();
-            $('#open-chart').show();
             if (isGoolePage) {
                 $('#addsite').hide();
 
@@ -101,7 +103,7 @@ const getRank = (googleurl: URL, callback: any): void => {
     googleurl.searchParams.set('num', '100');
     // To avoid being affected by paging
     // It says 100 results starting from page 0
-    googleurl.searchParams.set('start','0');
+    googleurl.searchParams.set('start', '0');
 
     if (_searchCache[keyword] === undefined) {
         _searchCache[keyword] = [];

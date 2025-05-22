@@ -62,7 +62,7 @@ export class CommonHelper {
     }
 
     public static createSiteElement(urlModel: SiteStorageModel, addDeleteButton?: boolean, rank?: number): JQuery<HTMLElement> {
-        var $element = $('<li><img src="' +
+        var $element = $('<li><span><img src="/images/chart-icon.png" id="chart-btn" class="favicon pointer"></span><img src="' +
             urlModel.origin +
             '/favicon.ico" class="favicon"/><span class="site-name">' +
             urlModel.hostname +

@@ -25,6 +25,7 @@ body {
 
 
 .chartContainer {
+    padding: 0px 5px;
     height: calc(100vh - 130px);
     position: relative;
 }
@@ -33,10 +34,6 @@ canvas {
     display: block;
     width: 100% !important;
     height: 100% !important;
-}
-
-#keyWordSelector {
-    display: none;
 }
 
 .filters {
