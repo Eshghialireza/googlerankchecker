@@ -3,6 +3,7 @@ import { StorageService } from "../shared/services/storage-service"
 import { CommonHelper } from "../shared/helpers/common-helper";
 import { SearchHelper } from "../shared/helpers/search-helper";
 import { SerpHelper } from "../shared/helpers/serp-helper";
+import { RankStorageModel } from "../shared/models/rank-storage";
 
 var _searchCache: { [key: string]: any } = {};
 const storageService = new StorageService();
@@ -28,18 +29,19 @@ $('#btnOptions').on('click', () => {
 })
 $(document).on('click', '#chart-btn', function () {
     var hostname = $(this).closest('li').find('.site-name').text();
-    chrome.storage.sync.set({hostname:hostname},function(){
-    chrome.tabs.create({ url: chrome.runtime.getURL("chart.html") });
+    chrome.storage.sync.set({ hostname: hostname }, function () {
+        chrome.tabs.create({ url: chrome.runtime.getURL("chart.html") });
     });
 });
 
 const sitesRefresh = (): void => {
+    console.log("in siteRefresh");
     chrome.storage.sync.get('mysites', async (data) => {
         if (data.mysites && data.mysites.length > 0) {
             const isGoolePage = await CommonHelper.isGooglePage();
             if (isGoolePage) {
                 $('#addsite').hide();
-
+console.log("its google page");
                 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                     let googleurl = new URL(tabs[0].url!);
                     let keyword = SearchHelper.getKeywordFromUrl(googleurl);
@@ -53,16 +55,19 @@ const sitesRefresh = (): void => {
                     }
                 });
             } else {
-                $('#addsite').show();
-                for (var i = 0; i < data.mysites.length; i++) {
-                    let sitename = data.mysites[i];
-
-                    $('#site-ranks').append(CommonHelper.createSiteElement(sitename));
-                }
+                console.log("its not google page");
+                chrome.storage.sync.get('myranks', (rankRes) => {
+                    const ranks: RankStorageModel[] = rankRes.myranks || [];
+                    $('#addsite').show();
+                    for (var i = 0; i < data.mysites.length; i++) {
+                        let sitename = data.mysites[i];
+                        const hasHistory = ranks.some(rank => rank.hostname.toLowerCase() === sitename.hostname.toLowerCase());
+                        console.log(sitename.hostname+"has rank?:"+hasHistory);
+                        $('#site-ranks').append(CommonHelper.createSiteElement(sitename, false, undefined, hasHistory));
+                    }
+                })
             }
 
-        } else {
-            $('#open-chart').hide();
         }
     });
 }
@@ -70,26 +75,33 @@ const sitesRefresh = (): void => {
 sitesRefresh();
 
 const showSites = (query: string, tabId: number): void => {
+    console.log("in show sites");
     if (query && query.length > 0) {
         if (_searchCache[query] != undefined) {
             chrome.storage.sync.get('mysites', (data) => {
                 if (data.mysites && data.mysites.length > 0) {
-                    let rankCounter = 0;
-                    for (var i = 0; i < data.mysites.length; i++) {
-                        let sitename = data.mysites[i];
+                    chrome.storage.sync.get('myranks', (rankRes) => {
+                        const ranks: RankStorageModel[] = rankRes.myranks || [];
+                        let rankCounter = 0;
+                        for (var i = 0; i < data.mysites.length; i++) {
+                            let sitename = data.mysites[i];
 
-                        var rankinfo = _searchCache[query].find((c: any) => { return c.domain.toLowerCase() == sitename.hostname.toLowerCase(); })
-                        var rank = 0;
-                        if (rankinfo) {
-                            rankCounter++;
-                            rank = rankinfo.rank;
+                            var rankinfo = _searchCache[query].find((c: any) => { return c.domain.toLowerCase() == sitename.hostname.toLowerCase(); })
+                            var rank = 0;
+                            if (rankinfo) {
+                                rankCounter++;
+                                rank = rankinfo.rank;
+                            }
+                            const hasHistory = ranks.some(rank => rank.hostname.toLowerCase() === sitename.hostname.toLowerCase());
+                            console.log(hasHistory);
+                            $('#site-ranks').append(CommonHelper.createSiteElement(sitename, false, rank, hasHistory));
+
                         }
-                        $('#site-ranks').append(CommonHelper.createSiteElement(sitename, false, rank));
+                        if (rankCounter > 0) {
+                            chrome.action.setBadgeText({ text: rankCounter.toString(), tabId: tabId });
+                        }
+                    })
 
-                    }
-                    if (rankCounter > 0) {
-                        chrome.action.setBadgeText({ text: rankCounter.toString(), tabId: tabId });
-                    }
                 }
             });
         }
