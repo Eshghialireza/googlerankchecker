@@ -52,15 +52,12 @@ $('#keywordSelector').on('change', function () {
     }
 })
 function openAndDraw(hostname: string) {
-    console.log("starting to draw");
     const siteSelector = document.getElementById('siteSelector') as HTMLSelectElement | null;
     const keywordSelector = document.getElementById('keywordSelector') as HTMLSelectElement | null;
     if (!siteSelector || !keywordSelector) return;
     chrome.storage.sync.get("myranks", data => {
-        console.log("data finded");
         const myranks: RankStorageModel[] = data.myranks || [];
         if (myranks.length > 0) {
-            console.log("there is data");
             myranks.forEach((rank) => {
                 let option = document.createElement('option');
                 if (hostname.toLowerCase() === rank.hostname.toLowerCase()) {

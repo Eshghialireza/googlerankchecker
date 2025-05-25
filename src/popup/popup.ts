@@ -15,7 +15,7 @@ $('#addsite').on('click', () => {
 
             const response = await storageService.addSite(tabs[0].url);
             if (response && response.added) {
-                $('#site-ranks').append(CommonHelper.createSiteElement(response.item));
+                $('#site-ranks').append(CommonHelper.createSiteElement(response.itemz));
                 $('#open-chart').show();
             }
         }
@@ -35,13 +35,11 @@ $(document).on('click', '#chart-btn', function () {
 });
 
 const sitesRefresh = (): void => {
-    console.log("in siteRefresh");
     chrome.storage.sync.get('mysites', async (data) => {
         if (data.mysites && data.mysites.length > 0) {
             const isGoolePage = await CommonHelper.isGooglePage();
             if (isGoolePage) {
                 $('#addsite').hide();
-console.log("its google page");
                 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                     let googleurl = new URL(tabs[0].url!);
                     let keyword = SearchHelper.getKeywordFromUrl(googleurl);
@@ -55,14 +53,12 @@ console.log("its google page");
                     }
                 });
             } else {
-                console.log("its not google page");
                 chrome.storage.sync.get('myranks', (rankRes) => {
                     const ranks: RankStorageModel[] = rankRes.myranks || [];
                     $('#addsite').show();
                     for (var i = 0; i < data.mysites.length; i++) {
                         let sitename = data.mysites[i];
                         const hasHistory = ranks.some(rank => rank.hostname.toLowerCase() === sitename.hostname.toLowerCase());
-                        console.log(sitename.hostname+"has rank?:"+hasHistory);
                         $('#site-ranks').append(CommonHelper.createSiteElement(sitename, false, undefined, hasHistory));
                     }
                 })
@@ -75,7 +71,6 @@ console.log("its google page");
 sitesRefresh();
 
 const showSites = (query: string, tabId: number): void => {
-    console.log("in show sites");
     if (query && query.length > 0) {
         if (_searchCache[query] != undefined) {
             chrome.storage.sync.get('mysites', (data) => {
@@ -93,7 +88,6 @@ const showSites = (query: string, tabId: number): void => {
                                 rank = rankinfo.rank;
                             }
                             const hasHistory = ranks.some(rank => rank.hostname.toLowerCase() === sitename.hostname.toLowerCase());
-                            console.log(hasHistory);
                             $('#site-ranks').append(CommonHelper.createSiteElement(sitename, false, rank, hasHistory));
 
                         }
