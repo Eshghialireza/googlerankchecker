@@ -1,5 +1,4 @@
 import { SiteStorageModel } from "../models/site-storage";
-
 const googleSearchPageRegex = new RegExp("google\..*/search");
 
 export class CommonHelper {
@@ -61,8 +60,8 @@ export class CommonHelper {
         return domain;
     }
 
-    public static createSiteElement(urlModel: SiteStorageModel, addDeleteButton?: boolean, rank?: number): JQuery<HTMLElement> {
-        var $element = $('<li><span><img src="/images/chart-icon.png" id="chart-btn" class="favicon pointer"></span><img src="' +
+    public static createSiteElement(urlModel: SiteStorageModel, addDeleteButton?: boolean, rank?: number, addRankHistoryButton?: boolean): JQuery<HTMLElement> {
+        var $element = $('<li><img src="' +
             urlModel.origin +
             '/favicon.ico" class="favicon"/><span class="site-name">' +
             urlModel.hostname +
@@ -73,10 +72,14 @@ export class CommonHelper {
                 urlModel.hostname +
                 '">X</span>');
         }
+        let $rankContainer = $('<div class="rank-container"></div>')
         if (rank) {
-            $element.append('<span class="rank-badge">' + rank + '</span>');
+            $rankContainer.append('<span class="rank-badge div-left">' + rank + '</span>');
         }
-
+        if (addRankHistoryButton) {
+            $rankContainer.append('<button id="chart-btn" class="btn div-right">history</button>')
+        }
+        $element.append($rankContainer);
         return $element;
     }
 
