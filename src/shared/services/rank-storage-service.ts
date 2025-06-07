@@ -10,46 +10,52 @@ export class RankStorageService {
     public addRank(rankStorageList: RankStorageModel[]): Promise<AddRankResponseModel[]> {
         return new Promise((resolve, reject) => {
             chrome.storage.sync.get('myranks', (data) => {
-                if (!data.myranks) {
-                    data.myranks = [];
-                }
-                const updatedRanks = [...data.myranks];
-                var today = new Date().toISOString().split('T')[0];
+                const updatedRanks = [...(data.myranks || [])];
+
                 let addedResult: AddRankResponseModel[] = [];
 
                 rankStorageList.forEach(newRank => {
-                    var targetSite: RankStorageModel = updatedRanks.find(item => item.hostname.toLowerCase() === newRank.hostname.toLowerCase());
-
-                    if (!targetSite) {
-                        targetSite = { hostname: newRank.hostname, keyWords: [{ keyword: newRank.keyWords[0].keyword, rankHistory: [...newRank.keyWords[0].rankHistory] }] };
-                        updatedRanks.push(targetSite);
-                        addedResult.push({ added: true, item: targetSite });
-                    } else {
-                        var targetWithKeyword = targetSite.keyWords.find(kw => kw.keyword === newRank.keyWords[0].keyword);
-
-                        if (targetWithKeyword) {
-                            var todayRank = targetWithKeyword.rankHistory.find(rankHistory => rankHistory.date === today);
-
-                            if (!todayRank) {
-                                targetWithKeyword.rankHistory.push({ date: today, rank: newRank.keyWords[0].rankHistory[0].rank });
-                                addedResult.push({ added: true, item: { hostname: newRank.hostname, keyWords: [targetWithKeyword] } });
-                            } else {
-                                addedResult.push({ added: false, item: { hostname: newRank.hostname, keyWords: [targetWithKeyword] } });
-                            }
-                        } else {
-                            targetSite.keyWords.push({
-                                keyword: newRank.keyWords[0].keyword,
-                                rankHistory: [...newRank.keyWords[0].rankHistory]
-                            });
-                            addedResult.push({ added: true, item: { hostname: newRank.hostname, keyWords: [{ keyword: newRank.keyWords[0].keyword, rankHistory: newRank.keyWords[0].rankHistory }] } });
-                        }
-                    }
+                    const site = this.findOrCreateRankHistory(updatedRanks, newRank.hostname);
+                    const result = this.addRankToKeyword(site, newRank)
+                    addedResult.push(result);
                 });
                 chrome.storage.sync.set({ 'myranks': updatedRanks }, () => {
                     resolve(addedResult);
                 });
             });
         });
+    }
+    //find an existing site in the ranks list by the hostname.
+    //or create a new one with an empty keyword list if it doesn't exist.
+    private findOrCreateRankHistory(updatedRanks: RankStorageModel[], hostname: string): RankStorageModel {
+        let targetSite: RankStorageModel | undefined = updatedRanks.find(item => item.hostname.toLowerCase() === hostname.toLowerCase());
+        if (!targetSite) {
+            targetSite = { hostname, keywords: [] };
+            updatedRanks.push(targetSite);
+        }
+        return targetSite;
+    }
+    // If the keyword doesn't exist it creates it and adds the new rank.
+    // If the keyword exists it checks whether today's rank already exists to decide whether to add a new one.
+    private addRankToKeyword(site: RankStorageModel, saveAbleRank: RankStorageModel): AddRankResponseModel {
+        var today = new Date().toISOString().split('T')[0];
+        var targetWithKeyword = site.keywords.find(kw => kw.keyword === saveAbleRank.keywords[0].keyword);
+        if (targetWithKeyword) {
+            var todayRank = targetWithKeyword.rankHistory.find(rankHistory => rankHistory.date === today);
+
+            if (!todayRank) {
+                targetWithKeyword.rankHistory.push({ date: today, rank: saveAbleRank.keywords[0].rankHistory[0].rank });
+                return ({ added: true, item: { hostname: saveAbleRank.hostname, keywords: [targetWithKeyword] } });
+            } else {
+                return ({ added: false, item: { hostname: saveAbleRank.hostname, keywords: [targetWithKeyword] } });
+            }
+        } else {
+            site.keywords.push({
+                keyword: saveAbleRank.keywords[0].keyword,
+                rankHistory: [...saveAbleRank.keywords[0].rankHistory]
+            });
+            return ({ added: true, item: { hostname: saveAbleRank.hostname, keywords: [{ keyword: saveAbleRank.keywords[0].keyword, rankHistory: saveAbleRank.keywords[0].rankHistory }] } });
+        }
     }
     public removeRanks(name: string): void {
         chrome.storage.sync.get('myranks', (data) => {
@@ -79,7 +85,7 @@ export class RankStorageService {
                         const targetSite = mysites.find(site => site.hostname.toLowerCase() === domain.toLowerCase())
                         if (targetSite) {
                             if (!rankStorageList.find(item => item.hostname.toLowerCase() === targetSite.hostname.toLowerCase())) {
-                                rankStorageList.push({ hostname: domain, keyWords: [{ keyword: keyword, rankHistory: [{ date: today, rank: i + 1 }] }] })
+                                rankStorageList.push({ hostname: domain, keywords: [{ keyword: keyword, rankHistory: [{ date: today, rank: i + 1 }] }] })
                             }
                         }
                     }
