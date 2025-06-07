@@ -70,8 +70,9 @@ export class RankStorageService {
                 if (data.mysites && data.mysites.length > 0) {
                     const mysites: SiteStorageModel[] = data.mysites;
                     const today = new Date().toISOString().split("T")[0];
-                    // Throw an error if the keyword is null or undefined
-                    if (!keyword) throw new Error('Keyword not found');
+                    // return if the keyword is null or undefined
+                    if (!keyword)
+                        return;
                     for (let i = 0; i < resultItems.length; i++) {
                         let url = this.serpHelper.getLinkFromResultItem(resultItems[i]);
                         let domain = CommonHelper.getDomainNameFromUrl(url);
