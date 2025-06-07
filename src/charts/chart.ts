@@ -23,17 +23,17 @@ $('#siteSelector').on('change', function () {
         const targetSite = mySites.find(site => site.hostname.toLowerCase() === hostname.toLowerCase());
         if (targetSite) {
             $('#keywordSelector').find('option').remove();
-            if (targetSite.keyWords) {
-                for (var i = 0; i < targetSite.keyWords.length; i++) {
+            if (targetSite.keywords) {
+                for (var i = 0; i < targetSite.keywords.length; i++) {
                     let option = document.createElement('option');
                     if (i === 0)
                         option.selected = true;
-                    option.value = targetSite.keyWords[i].keyword;
-                    option.textContent = targetSite.keyWords[i].keyword;
+                    option.value = targetSite.keywords[i].keyword;
+                    option.textContent = targetSite.keywords[i].keyword;
                     keywordSelector.appendChild(option);
                 }
             }
-            drawChart(targetSite.keyWords[0].rankHistory,targetSite.keyWords[0].keyword,targetSite.hostname);
+            drawChart(targetSite.keywords[0].rankHistory,targetSite.keywords[0].keyword,targetSite.hostname);
         }
     })
 });
@@ -45,7 +45,7 @@ $('#keywordSelector').on('change', function () {
         chrome.storage.sync.get("myranks", data => {
             const mysites: RankStorageModel[] = data.myranks || [];
             const targetSite = mysites.find((site) => site.hostname.toLowerCase() === selectSite.toLowerCase());
-            const targetKw = targetSite?.keyWords.find((kw) => kw.keyword === selectKwString);
+            const targetKw = targetSite?.keywords.find((kw) => kw.keyword === selectKwString);
             if (targetKw)
                 drawChart(targetKw.rankHistory, targetKw?.keyword, selectSite);
         })
@@ -68,19 +68,19 @@ function openAndDraw(hostname: string) {
                 siteSelector.appendChild(option);
             })
             const targetSite = myranks.find((site) => site.hostname.toLowerCase() === hostname.toLowerCase());
-            if (!targetSite || targetSite.keyWords.length === 0) {
+            if (!targetSite || targetSite.keywords.length === 0) {
                 alert("Oops! Nothing to show yet. Try searching a few keywords to see who's ruling Google! 🚀");
                 return;
             } else {
-                for (var i = 0; i < targetSite.keyWords.length; i++) {
+                for (var i = 0; i < targetSite.keywords.length; i++) {
                     let option = document.createElement('option');
                     if (i === 0)
                         option.selected = true;
-                    option.value = targetSite.keyWords[i].keyword;
-                    option.textContent = targetSite.keyWords[i].keyword;
+                    option.value = targetSite.keywords[i].keyword;
+                    option.textContent = targetSite.keywords[i].keyword;
                     keywordSelector.appendChild(option);
                 }
-                drawChart(targetSite.keyWords[0].rankHistory, targetSite.keyWords[0].keyword, targetSite.hostname);
+                drawChart(targetSite.keywords[0].rankHistory, targetSite.keywords[0].keyword, targetSite.hostname);
             }
         } else {
             alert("Oops! Nothing to show yet. Try searching a few keywords to see who`s ruling Google! 🚀");
