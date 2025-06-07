@@ -28,7 +28,7 @@ $('#btnOptions').on('click', () => {
     chrome.runtime.openOptionsPage();
 })
 $(document).on('click', '#chart-btn', function () {
-    var hostname = $(this).closest('li').find('.site-name').text();
+    const hostname = $(this).closest('li').find('.site-name').text();
     chrome.storage.sync.set({ hostname: hostname }, function () {
         chrome.tabs.create({ url: chrome.runtime.getURL("chart.html") });
     });
