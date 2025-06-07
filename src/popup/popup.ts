@@ -15,7 +15,7 @@ $('#addsite').on('click', () => {
 
             const response = await storageService.addSite(tabs[0].url);
             if (response && response.added) {
-                $('#site-ranks').append(CommonHelper.createSiteElement(response.itemz));
+                $('#site-ranks').append(CommonHelper.createSiteElement(response.item));
                 $('#open-chart').show();
             }
         }
