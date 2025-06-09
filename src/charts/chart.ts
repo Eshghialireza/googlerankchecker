@@ -6,7 +6,7 @@ let rankChartInstance: Chart | null = null;
 document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.sync.get("hostname", function (result) {
         if (result.hostname) {
-            openAndDraw(result.hostname);
+            setupChartView(result.hostname);
             chrome.storage.local.remove("hostname");
         } else {
             throw Error("no host name found in storage");
@@ -37,7 +37,7 @@ $('#siteSelector').on('change', function () {
         }
     })
 });
-
+//With any change in the keywordSelector the chart will refresh
 $('#keywordSelector').on('change', function () {
     const selectKwString = String($(this).val() || '');
     const selectSite = String($('#siteSelector').val() || '');
@@ -51,7 +51,8 @@ $('#keywordSelector').on('change', function () {
         })
     }
 })
-function openAndDraw(hostname: string) {
+//Initialize site and keyword selectors, retrieves stored ranking data, and updates the dropdown
+function setupChartView(hostname: string) {
     const siteSelector = document.getElementById('siteSelector') as HTMLSelectElement | null;
     const keywordSelector = document.getElementById('keywordSelector') as HTMLSelectElement | null;
     if (!siteSelector || !keywordSelector) return;
@@ -88,6 +89,7 @@ function openAndDraw(hostname: string) {
         }
     })
 }
+//Renders a ranking history chart for a keyword associated with a hostname
 function drawChart(
     rankHistory: { date: string; rank: number }[],
     keyword: string,
