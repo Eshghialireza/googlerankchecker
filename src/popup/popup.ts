@@ -27,6 +27,7 @@ $('#refreshbtn').on('click', SearchHelper.refresh);
 $('#btnOptions').on('click', () => {
     chrome.runtime.openOptionsPage();
 })
+// stores the hostname of the target site to make it accessible globally
 $(document).on('click', '#chart-btn', function () {
     const hostname = $(this).closest('li').find('.site-name').text();
     chrome.storage.sync.set({ hostname: hostname }, function () {

@@ -14,6 +14,7 @@ const observer = new MutationObserver(async (mutationsList, observer) => {
     let googleUrl = new URL(window.location.href);
     const keyword = SearchHelper.getKeywordFromUrl(googleUrl);
     const currentUrl = googleUrl.href;
+    // Whenever the Google url changes, it will check and save the ranks 
     if (lastUrl != currentUrl) {
         lastUrl = currentUrl;
         let resultItems = await serpHelper.getFullResaultItems(googleUrl);
